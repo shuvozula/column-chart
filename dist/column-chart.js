@@ -1,7 +1,340 @@
+/**
+ * Namespaces for ColumnChart.
+ */
+
+var ColumnChart = ColumnChart || {};
+
+ColumnChart.BarChart = {};
+ColumnChart.StackedBarChart = {};
 
 
 
-DEFAULT_HEIGHT = 20
+DEFAULT_HEIGHT = 20;
+
+
+
+/**
+ * Static function to create tooltips for bar-charts
+ * @param  {Object} data Contains a .title and .text property to be displayed in
+ *                       the tooltip
+ * @return {String}      HTML string that will be used to render in the tooltip.
+ */
+ColumnChart.tooltip = function(data) {
+    return '<strong>' + data.title + '</strong>' +
+           '<p>' + data.text + '</p>';
+};
+
+
+
+/**
+ * Used by Multi-Bar charts to display legend with show/hide functionality.
+ * @constructor
+ */
+ColumnChart.LegendControls = function() {
+
+    /**
+     * D3 dispatcher object to manage event handling
+     * @type {d3.dispatch}
+     */
+    this.dispatch = d3.dispatch('showBar', 'hideBar', 'showOnly', 'resetAll');
+};
+
+
+/**
+ * Main entry point to start creating the legends for the Multi-Bar chart.
+ * @param {d3.scale.Category10} colorMap Color map scale with column references.
+ * @param {Object} svgIds Mapping of legend-title to legend class-id.
+ */
+ColumnChart.LegendControls.prototype.createLegend = function(
+        tableId, colorMap, svgIds) {
+    // calculate the hosting table's width so that the legend can be built
+    var tableElem = $('#' + tableId);
+    var hostingTableWidth = tableElem.width();
+    // start building the panel
+    var panels = this.addPanel_(tableElem);
+    this.addLegend2Panel_(panels, colorMap, svgIds, hostingTableWidth);
+    this.addListeners_(panels, colorMap, svgIds);
+};
+
+
+/**
+ * Adds the basic SVG panel within a DIV container.
+ * @return {Object} Reference to the SVG and the SVG->G container that will have
+ *                  all the legend items.
+ * @private
+ */
+ColumnChart.LegendControls.prototype.addPanel_ = function(tableElem) {
+    var svgContainer = d3.select('body').append('div')
+                                        .attr('class', 'multi-bar-legend')
+                                            .append('svg');
+    var gContainer = svgContainer.append('g')
+                                 .attr('transform', 'translate(0, 20)');
+    // add the DIV->SVG container for the panel just before table elem
+    $('.multi-bar-legend').insertBefore($(tableElem));
+    return {'svgContainer': svgContainer,
+            'gContainer': gContainer};
+};
+
+
+/**
+ * Adds multiple groups of circle and text elements (i.e. Legend) all positioned
+ * next to eachother.
+ * @param {object} panels Object containing the SVG & G containers.
+ * @param {d3.scale.Category10} colorMap Color map scale with column references.
+ * @param {Array.<string>} svgIds Array of SVG class IDs for each rect.
+ * @param {Integer} hostingTableWidth Width of the parent/hosting table.
+ * @private
+ */
+ColumnChart.LegendControls.prototype.addLegend2Panel_ = function(
+        panels, colorMap, svgIds, hostingTableWidth) {
+    var container, circle, text, calcdWidth, currX, prevX, currY, prevY, currSlot;
+    var yDiff = 25;
+    var colNames = colorMap.domain();
+    var leftPadding = 10;
+    // fetch the widest legend text length
+    var maxLength = 0;
+    colNames.forEach(function (colName, i) {
+        calcdWidth = getTextWidth(colName) + 70;
+        console.log('Calcd. width: ' + calcdWidth);
+        maxLength = Math.max(maxLength, calcdWidth);
+    });
+    console.log('Maxlength: ' + maxLength.toString());
+    // loop over each stack in bar and add containers
+    currY = 0;
+    colNames.forEach(function (colName, i) {
+        // calculate where to position each container based on available slots
+        if (!currX) {
+            currX = 10;
+            prevX = 10;
+        } else {
+            currX = prevX + maxLength;
+            if ((currX + maxLength) > hostingTableWidth) {
+                currX = 10;
+                currY = currY + yDiff;
+            }
+        }
+        // add a circle and text to each container
+        container = panels.gContainer.append('g')
+                          .attr('class', 'legend-symbol')
+                          .attr('toggle', 'show')
+                          .attr('xshow', 'false')
+                          .attr('transform', 'translate(' + currX + ',' + currY +')');
+        container.append('circle')
+                 .attr('class', 'legend-symbol-circle')
+                 .attr('r', 5)
+                 .style({'stroke-width': 2 + 'px',
+                         'fill': colorMap(colName),
+                         'stroke': colorMap(colName)});
+        container.append('text')
+                 .attr('class', 'legend-symbol-text')
+                 .attr('dy', 0.32 + 'em')
+                 .attr('dx', 8)
+                 .text(colName);
+        prevX = currX;
+    });
+    var numSlots = Math.floor((hostingTableWidth - leftPadding) / maxLength);
+    panels.svgContainer.style('width', (numSlots * maxLength) + 40 + 'px');
+    panels.svgContainer.style('height', currY + 40 + 'px');
+};
+
+
+/**
+ * Adds the click and double-click listeners to each legend item, so that bars
+ * are hidden/shown based on selection.
+ * @param {Object} panels Object with reference to the SVG and G containers.
+ * @param {d3.scale.category10} colorMap Color map scale with column references.
+ * @param {Object} svgIds Mapping of legend-title to legend class-id.
+ * @private
+ */
+ColumnChart.LegendControls.prototype.addListeners_ = function(panels, colorMap, svgIds) {
+    var d3Elem, doShow, text, gElem, exclusiveShow;
+    var self = this;
+    panels.gContainer.selectAll('g')
+                     .on('click', function(d) {
+                        return self.onSingleClick_(self, this, svgIds);
+                     })
+                     .on('dblclick', function(d) {
+                        return self.onDoubleClick_(self, this, svgIds);
+                     });
+};
+
+
+/**
+ * Event handler when legend item is single-clicked
+ * @param  {Object} dis Reference to the ColumnChart.LegendControls object.
+ * @param  {Element} elem <G> element that was clicked.
+ * @param  {Object.<String, String>} svgIds Object mapping of SVG Ids to Text.
+ * @private
+ */
+ColumnChart.LegendControls.prototype.onSingleClick_ = function(dis, elem, svgIds) {
+    var d3Elem, doShow, text, gElem;
+    d3Elem = d3.select(elem);
+    text = d3Elem.select('text').html();
+    // if xshow is enabled, then just disable it, otherwise
+    // continue with hiding/showing all bars corresponding
+    // to clicked legend
+    if (d3Elem.attr('xshow') == 'true') {
+        d3Elem.attr('xshow', 'false');
+        $('.legend-symbol').each(function (i, elem) {
+            gElem = d3.select(elem);
+            if (gElem.select('text').text() != text) {
+                gElem.attr('toggle', 'show')
+                     .select('circle')
+                     .style('fill', gElem.select('circle')
+                                         .style('stroke'));
+            }
+        });
+        dis.dispatch.resetAll(elem, getKeyByValue(svgIds, text));
+    } else {
+        // fetch the stored toggle value and text
+        doShow = d3Elem.attr('toggle') == 'show';
+        text = d3Elem.select('text').html();
+        // show/hide all matching elements with the provided
+        // classname in svgIds[text]
+        if (doShow) {
+           d3Elem.select('circle')
+                 .style('fill', 'white');
+           dis.dispatch.hideBar(elem, getKeyByValue(svgIds, text));
+        } else {
+           d3Elem.select('circle')
+                 .style('fill', d3Elem.select('circle')
+                                      .style('stroke'));
+           dis.dispatch.showBar(elem, getKeyByValue(svgIds, text));
+        }
+        // update the toggle value
+        d3Elem.attr('toggle', ((doShow) ? 'hide': 'show'));
+    }
+};
+
+
+/**
+ * Event handler when legend is double-clicked
+ * @param  {Object} dis Reference to the ColumnChart.LegendControls object.
+ * @param  {Element} elem <G> element that was clicked.
+ * @param  {Object.<String, String>} svgIds Object mapping of SVG Ids to Text
+ * @private
+ */
+ColumnChart.LegendControls.prototype.onDoubleClick_ = function(dis, elem, svgIds) {
+    var d3Elem, doShow, text, gElem, exclusiveShow;
+    d3Elem = d3.select(elem);
+    // fetch the stored xshow value and text
+    exclusiveShow = d3Elem.attr('xshow') == 'true';
+    text = d3Elem.select('text').html();
+    // if exclusive-show is disabled, then enable it by
+    // disabling all other legends and then only revealing
+    // the bars for the dbl-clicked legend
+    if (!exclusiveShow) {
+        $('.legend-symbol').each(function (i, elem) {
+            gElem = d3.select(elem);
+            if (gElem.select('text').text() != text) {
+                gElem.attr('toggle', 'hide')
+                     .select('circle')
+                     .style('fill', 'white');
+            } else {
+                gElem.attr('toggle', 'show')
+                     .select('circle')
+                     .style('fill', gElem.select('circle')
+                                         .style('stroke'));
+            }
+        });
+        dis.dispatch.showOnly(elem, getKeyByValue(svgIds, text));
+        // update the toggle value
+        d3Elem.attr('xshow', 'true');
+    }
+};
+
+
+
+/**
+ * Constructor for Inline Barcharts.
+ * @param {Element} tableID Table ID of table where these bar-charts will appear.
+ * @constructor
+ */
+ColumnChart.BarChart = function(tableID) {
+
+    /**
+     * Internal reference to the parent table whose TD elements need to be
+     * formatted as bar charts (horizontal)
+     * @type {Element}
+     * @private
+     */
+    this.tableID_ = tableID;
+
+    /**
+     * Default height of each horizontal bar
+     * @type {Number}
+     * @private
+     */
+    this.defaultHeight_ = DEFAULT_HEIGHT;
+
+    /**
+     * Used for scaling the width of the horizontal bar based on the calculated
+     * max-value. Max values are stored as attributes within the object, keyed
+     * by the column name.
+     * @type {Object}
+     * @private
+     */
+    this.maxVal_ = {};
+};
+
+
+/**
+ * Main entry point for Barcharts - Calculates the max value in each column,
+ * then looks over each <DIV> placeholder element, extracts all data and then
+ * constructs the bars with provided widths, column-name, bar value, etc.
+ */
+ColumnChart.BarChart.prototype.renderInlineBarcharts = function() {
+
+    var divElem, colName, scaledWidth, parentElem, parentElemWidth;
+    var divPlaceHolders = $('barchart');
+    var toolTip = d3.select('body').append('div')
+                                   .attr('class', 'tooltip')
+                                   .style('opacity', 0);
+
+    // loop over each div-placeholder and fetch the max value. This is help
+    // scale each bar to the available width in the parent TD element.
+    for (var i = 0; i < divPlaceHolders.length; i++) {
+        divElem = divPlaceHolders[i];
+        colName = divElem.dataset.forColumn;
+        if (!(colName in this.maxVal_))
+            this.maxVal_[colName] = 0.0;
+        this.maxVal_[colName] = Math.max(this.maxVal_[colName],
+                                         parseFloat(divElem.dataset.barValue));
+    }
+
+    // loop over each div placeholder for the barchart and insert SVG element to
+    // render
+    for (var j = 0; j < divPlaceHolders.length; j++) {
+        divElem = divPlaceHolders[j];
+        colName = divElem.dataset.forColumn;
+        parentElem = $(divElem).parent();
+        parentElemWidth = $(parentElem).width();
+        // calculate the scaled width
+        scaledWidth = (divElem.dataset.barValue / this.maxVal_[colName]) * parentElemWidth;
+        // append the SVG element to the parent of div
+        d3.select(parentElem[0]).append('svg')
+            .style({'width': parentElemWidth,
+                    'height': (this.defaultHeight_ + 2).toString()})
+                .append('rect')
+                .text(divElem.dataset.barValueText)
+                .attr('width', scaledWidth)
+                .attr('height', this.defaultHeight_.toString())
+                .style('fill', divElem.dataset.barColor)
+                .style('opacity', 0.8)
+                .on('mouseover', function(d) {
+                    d3.select($(this)[0]).transition().style('opacity', 1);
+                    toolTip.transition().style('opacity', 0.9);
+                    toolTip.html(ColumnChart.tooltip(
+                            {'title': colName, 'text': this.innerHTML}))
+                           .style('left', (d3.event.pageX + 20) + 'px')
+                           .style('top', (d3.event.pageY - 70) + 'px');})
+                .on('mouseout', function(d) {
+                    d3.select($(this)[0]).transition().style('opacity', 0.8);
+                    toolTip.transition().style('opacity', 0);});
+        // remove the div element
+        $(divElem).remove();
+    }
+};
 
 
 /**
@@ -62,7 +395,7 @@ ColumnChart.StackedBarChart.prototype.getMax_ = function(divPlaceHolders) {
         this.maxVal_[colName] = Math.max(
                 this.maxVal_[colName],
                 parseFloat(divElem.dataset.stackedBarCount));
-    };
+    }
 };
 
 
@@ -83,11 +416,11 @@ ColumnChart.StackedBarChart.prototype.buildData_ = function(
         data.width = width;
         totalWidth = totalWidth + width;
         // assign x position
-        if (j == 0)
+        if (j === 0)
             data.xpos = 0;
         else
-            data.xpos = rectVals['data'][j - 1]['xpos'] +
-                        rectVals['data'][j - 1]['width'];
+            data.xpos = rectVals.data[j - 1].xpos +
+                        rectVals.data[j - 1].width;
     });
     return totalWidth;
 };
@@ -123,8 +456,8 @@ ColumnChart.StackedBarChart.prototype.renderInlineBarcharts = function() {
         // assign x values to each bar based on calculated width
         totalWidth = this.buildData_(rectVals, currColMaxVal, parentElemWidth);
         // apply the color map
-        if (colorMap_.domain().length == 0)
-            colorMap_.domain(rectVals['cols']);
+        if (colorMap_.domain().length === 0)
+            colorMap_.domain(rectVals.cols);
         // set the default sort value to be the total value of all the bars
         parentElem.attr('sorttable_customkey', divElem.dataset.stackedBarCount);
         // append the SVG element to the parent of div
@@ -138,7 +471,7 @@ ColumnChart.StackedBarChart.prototype.renderInlineBarcharts = function() {
                 .attr('totalwidth', totalWidth)
                 .attr('colname', colName)
                 .selectAll('rect')
-                .data(rectVals['data'])
+                .data(rectVals.data)
                 .enter()
                 .append('rect')
                     .text(function (d) { return d.cnt_label; })
@@ -148,22 +481,22 @@ ColumnChart.StackedBarChart.prototype.renderInlineBarcharts = function() {
                     .attr('height', this.defaultHeight_.toString())
                     .attr('value', function (d) { return d.count; })
                     .style('fill', function (d) { return colorMap_(d.col); })
-                    .style('opacity', .8)
+                    .style('opacity', 0.8)
                     .on('mouseover', function(d) {
                         d3.select(this).transition().style('opacity', 1);
-                        toolTip.transition().style('opacity', .9);
+                        toolTip.transition().style('opacity', 0.9);
                         toolTip.html(ColumnChart.tooltip({'title': d.col,
                                                              'text': this.innerHTML}))
                                .style('left', d3.event.pageX + 'px')
                                .style('top', (d3.event.pageY - 70) + 'px');})
                     .on('mouseout', function(d) {
-                        d3.select(this).transition().style('opacity', .8);
+                        d3.select(this).transition().style('opacity', 0.8);
                         toolTip.transition().style('opacity', 0);
                     });
         // remove the div element
         $(divElem).remove();
         // collect all the SVG class-IDs for the legend toggles
-        if (d3.keys(svgIds).length == 0) {
+        if (d3.keys(svgIds).length === 0) {
             rectVals.data.forEach(function (elem) {
                 svgIds[elem.svg_class_id] = elem.col;
             });

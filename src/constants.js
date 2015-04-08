@@ -1,0 +1,3 @@
+
+DEFAULT_HEIGHT = 20;
+

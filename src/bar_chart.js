@@ -1,8 +1,4 @@
 
-
-DEFAULT_HEIGHT = 20
-
-
 /**
  * Constructor for Inline Barcharts.
  * @param {Element} tableID Table ID of table where these bar-charts will appear.
@@ -58,12 +54,12 @@ ColumnChart.BarChart.prototype.renderInlineBarcharts = function() {
             this.maxVal_[colName] = 0.0;
         this.maxVal_[colName] = Math.max(this.maxVal_[colName],
                                          parseFloat(divElem.dataset.barValue));
-    };
+    }
 
     // loop over each div placeholder for the barchart and insert SVG element to
     // render
-    for (var i = 0; i < divPlaceHolders.length; i++) {
-        divElem = divPlaceHolders[i];
+    for (var j = 0; j < divPlaceHolders.length; j++) {
+        divElem = divPlaceHolders[j];
         colName = divElem.dataset.forColumn;
         parentElem = $(divElem).parent();
         parentElemWidth = $(parentElem).width();
@@ -78,19 +74,18 @@ ColumnChart.BarChart.prototype.renderInlineBarcharts = function() {
                 .attr('width', scaledWidth)
                 .attr('height', this.defaultHeight_.toString())
                 .style('fill', divElem.dataset.barColor)
-                .style('opacity', .8)
+                .style('opacity', 0.8)
                 .on('mouseover', function(d) {
                     d3.select($(this)[0]).transition().style('opacity', 1);
-                    toolTip.transition().style('opacity', .9);
+                    toolTip.transition().style('opacity', 0.9);
                     toolTip.html(ColumnChart.tooltip(
                             {'title': colName, 'text': this.innerHTML}))
                            .style('left', (d3.event.pageX + 20) + 'px')
                            .style('top', (d3.event.pageY - 70) + 'px');})
                 .on('mouseout', function(d) {
-                    d3.select($(this)[0]).transition().style('opacity', .8);
-                    toolTip.transition().style('opacity', 0);
-                });
+                    d3.select($(this)[0]).transition().style('opacity', 0.8);
+                    toolTip.transition().style('opacity', 0);});
         // remove the div element
-        $(divElem).remove()
+        $(divElem).remove();
     }
 };
