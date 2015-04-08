@@ -1,6 +1,4 @@
 
-
-
 /**
  * Used by Multi-Bar charts to display legend with show/hide functionality.
  * @constructor

@@ -1,8 +1,4 @@
 
-
-DEFAULT_HEIGHT = 20;
-
-
 /**
  * Constructor for Inline Barcharts.
  * @param {Element} tableID Table ID of table where these bar-charts will appear.

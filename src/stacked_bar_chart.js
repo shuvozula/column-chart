@@ -1,9 +1,4 @@
 
-
-
-DEFAULT_HEIGHT = 20;
-
-
 /**
  * Constructor for the Multi-Bar Inline chart to embed within table TD elements.
  * @param {String} tableID Table-ID to which this multi-bar chart will work on.
