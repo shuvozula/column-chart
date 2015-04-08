@@ -1,4 +1,6 @@
 
+
+
 /**
  * Used by Multi-Bar charts to display legend with show/hide functionality.
  * @constructor
@@ -215,3 +217,4 @@ ColumnChart.LegendControls.prototype.onDoubleClick_ = function(dis, elem, svgIds
         d3Elem.attr('xshow', 'true');
     }
 };
+
