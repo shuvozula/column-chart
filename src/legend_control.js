@@ -23,7 +23,7 @@ ColumnChart.LegendControls = function() {
 ColumnChart.LegendControls.prototype.createLegend = function(
         tableId, colorMap, svgIds) {
     // calculate the hosting table's width so that the legend can be built
-    var tableElem = $('#' + tableId)
+    var tableElem = $('#' + tableId);
     var hostingTableWidth = tableElem.width();
     // start building the panel
     var panels = this.addPanel_(tableElem);
@@ -102,7 +102,7 @@ ColumnChart.LegendControls.prototype.addLegend2Panel_ = function(
                          'stroke': colorMap(colName)});
         container.append('text')
                  .attr('class', 'legend-symbol-text')
-                 .attr('dy', .32 + 'em')
+                 .attr('dy', 0.32 + 'em')
                  .attr('dx', 8)
                  .text(colName);
         prevX = currX;
