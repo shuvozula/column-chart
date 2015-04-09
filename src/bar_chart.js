@@ -33,6 +33,37 @@ ColumnChart.BarChart = function(tableID) {
 
 
 /**
+ * Shows a tooltip for barchart.
+ * @param {Object} d Datum object containing mouse position values.
+ * @param {Object} tooltip D3 tooltip object.
+ * @param {String} colName Column name to which this on-mouse-over applies.
+ * @private
+ */
+ColumnChart.BarChart.prototype.onMouseOver_ = function(d, toolTip, colName) {
+
+    d3.select($(this)[0]).transition().style('opacity', 1);
+    
+    toolTip.transition().style('opacity', 0.9);
+    toolTip.html(ColumnChart.tooltip(
+            {'title': colName, 'text': this.innerHTML}))
+           .style('left', (d3.event.pageX + 20) + 'px')
+           .style('top', (d3.event.pageY - 70) + 'px');
+};
+
+
+/**
+ * Hides tooltip for barchart on mouse out.
+ * @param  {Object} d Data object containing mouse position values.
+ * @param  {Object} tooltip D3 tooltip object.
+ * @private
+ */
+ColumnChart.BarChart.prototype.onMouseOut_ = function(d, toolTip) {
+    d3.select($(this)[0]).transition().style('opacity', 0.8);
+    toolTip.transition().style('opacity', 0);
+};
+
+
+/**
  * Main entry point for Barcharts - Calculates the max value in each column,
  * then looks over each <DIV> placeholder element, extracts all data and then
  * constructs the bars with provided widths, column-name, bar value, etc.
@@ -40,7 +71,7 @@ ColumnChart.BarChart = function(tableID) {
 ColumnChart.BarChart.prototype.renderInlineBarcharts = function() {
 
     var divElem, colName, scaledWidth, parentElem, parentElemWidth;
-    var divPlaceHolders = $('barchart');
+    var divPlaceHolders = $('.barchart');
     var toolTip = d3.select('body').append('div')
                                    .attr('class', 'tooltip')
                                    .style('opacity', 0);
@@ -70,22 +101,17 @@ ColumnChart.BarChart.prototype.renderInlineBarcharts = function() {
             .style({'width': parentElemWidth,
                     'height': (this.defaultHeight_ + 2).toString()})
                 .append('rect')
-                .text(divElem.dataset.barValueText)
+                .text(divElem.dataset.barTooltipText)
                 .attr('width', scaledWidth)
                 .attr('height', this.defaultHeight_.toString())
                 .style('fill', divElem.dataset.barColor)
                 .style('opacity', 0.8)
-                .on('mouseover', function(d) {
-                    d3.select($(this)[0]).transition().style('opacity', 1);
-                    toolTip.transition().style('opacity', 0.9);
-                    toolTip.html(ColumnChart.tooltip(
-                            {'title': colName, 'text': this.innerHTML}))
-                           .style('left', (d3.event.pageX + 20) + 'px')
-                           .style('top', (d3.event.pageY - 70) + 'px');})
+                .on('mouseover', function(d) { 
+                    this.onMouseOver_(d, toolTip, colName); })  // jshint ignore:line
                 .on('mouseout', function(d) {
-                    d3.select($(this)[0]).transition().style('opacity', 0.8);
-                    toolTip.transition().style('opacity', 0);});
+                    this.onMouseOut_(d, toolTip); });  // jshint ignore:line
         // remove the div element
         $(divElem).remove();
     }
 };
+

@@ -25,8 +25,21 @@ module.exports = function(grunt) {
         }
       }
     },
-    qunit: {
-      files: ['test/**/*.html']
+    jasmine: {
+      columnChart: {
+        src: [
+          'src/namespaces.js',
+          'src/constants.js',
+          'src/tooltip.js',
+          'src/legend_control.js',
+          'src/bar_chart.js',
+          'src/stacked_bar_chart.js'
+        ],
+        options: {
+          specs: ['test/*.js'],
+          helpers: ['libs/*.js']
+        }
+      }
     },
     jshint: {
       files: ['Gruntfile.js', 'src/**/*.js', 'test/**/*.js'],
@@ -42,18 +55,18 @@ module.exports = function(grunt) {
     },
     watch: {
       files: ['<%= jshint.files %>'],
-      tasks: ['jshint', 'qunit']
+      tasks: ['jshint', 'jasmine']
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-qunit');
+  grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-concat');
 
-  grunt.registerTask('test', ['jshint', 'qunit']);
+  grunt.registerTask('test', ['jshint', 'jasmine']);
 
-  grunt.registerTask('default', ['jshint', 'qunit', 'concat', 'uglify']);
+  grunt.registerTask('default', ['jshint', 'jasmine', 'concat', 'uglify']);
 
 };
