@@ -71,7 +71,7 @@ ColumnChart.BarChart.prototype.onMouseOut_ = function(d, toolTip) {
 ColumnChart.BarChart.prototype.renderInlineBarcharts = function() {
 
     var divElem, colName, scaledWidth, parentElem, parentElemWidth;
-    var divPlaceHolders = $('barchart');
+    var divPlaceHolders = $('.barchart');
     var toolTip = d3.select('body').append('div')
                                    .attr('class', 'tooltip')
                                    .style('opacity', 0);
@@ -101,13 +101,15 @@ ColumnChart.BarChart.prototype.renderInlineBarcharts = function() {
             .style({'width': parentElemWidth,
                     'height': (this.defaultHeight_ + 2).toString()})
                 .append('rect')
-                .text(divElem.dataset.barValueText)
+                .text(divElem.dataset.barTooltipText)
                 .attr('width', scaledWidth)
                 .attr('height', this.defaultHeight_.toString())
                 .style('fill', divElem.dataset.barColor)
                 .style('opacity', 0.8)
-                .on('mouseover', this.onMouseOver_(d, toolTip, colName))
-                .on('mouseout', this.onMouseOut_(d, toolTip));
+                .on('mouseover', function(d) { 
+                    this.onMouseOver_(d, toolTip, colName); })  // jshint ignore:line
+                .on('mouseout', function(d) {
+                    this.onMouseOut_(d, toolTip); });  // jshint ignore:line
         // remove the div element
         $(divElem).remove();
     }

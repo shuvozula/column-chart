@@ -26,7 +26,20 @@ module.exports = function(grunt) {
       }
     },
     jasmine: {
-      files: ['test/**/*.html']
+      columnChart: {
+        src: [
+          'src/namespaces.js',
+          'src/constants.js',
+          'src/tooltip.js',
+          'src/legend_control.js',
+          'src/bar_chart.js',
+          'src/stacked_bar_chart.js'
+        ],
+        options: {
+          specs: ['test/*.js'],
+          helpers: ['libs/*.js']
+        }
+      }
     },
     jshint: {
       files: ['Gruntfile.js', 'src/**/*.js', 'test/**/*.js'],
