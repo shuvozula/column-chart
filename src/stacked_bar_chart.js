@@ -114,7 +114,7 @@ ColumnChart.StackedBarChart.prototype.onMouseOver_ = function(d, toolTip) {
 ColumnChart.StackedBarChart.prototype.onMouseOut_ = function(d, toolTip) {
 
     d3.select(this).transition().style('opacity', 0.8);
-    
+
     toolTip.transition().style('opacity', 0);
 };
 
