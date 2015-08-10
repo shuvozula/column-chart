@@ -283,15 +283,15 @@ ColumnChart.BarChart = function(tableID) {
  * @param {Object} d Datum object containing mouse position values.
  * @param {Object} tooltip D3 tooltip object.
  * @param {String} colName Column name to which this on-mouse-over applies.
+ * @param {Element} rect Rectangle SVG element on which mouse-over occured.
  * @private
  */
-ColumnChart.BarChart.prototype.onMouseOver_ = function(d, toolTip, colName) {
+ColumnChart.BarChart.prototype.onMouseOver_ = function(d, toolTip, colName, rect) {
+    d3.select($(rect)[0]).transition().style('opacity', 1);
 
-    d3.select($(this)[0]).transition().style('opacity', 1);
-    
     toolTip.transition().style('opacity', 0.9);
     toolTip.html(ColumnChart.tooltip(
-            {'title': colName, 'text': this.innerHTML}))
+            {'title': colName, 'text': rect.innerHTML}))
            .style('left', (d3.event.pageX + 20) + 'px')
            .style('top', (d3.event.pageY - 70) + 'px');
 };
@@ -303,8 +303,8 @@ ColumnChart.BarChart.prototype.onMouseOver_ = function(d, toolTip, colName) {
  * @param  {Object} tooltip D3 tooltip object.
  * @private
  */
-ColumnChart.BarChart.prototype.onMouseOut_ = function(d, toolTip) {
-    d3.select($(this)[0]).transition().style('opacity', 0.8);
+ColumnChart.BarChart.prototype.onMouseOut_ = function(d, toolTip, rect) {
+    d3.select($(rect)[0]).transition().style('opacity', 0.8);
     toolTip.transition().style('opacity', 0);
 };
 
@@ -316,6 +316,7 @@ ColumnChart.BarChart.prototype.onMouseOut_ = function(d, toolTip) {
  */
 ColumnChart.BarChart.prototype.renderInlineBarcharts = function() {
 
+    var that = this;
     var divElem, colName, scaledWidth, parentElem, parentElemWidth;
     var divPlaceHolders = $('.barchart');
     var toolTip = d3.select('body').append('div')
@@ -347,15 +348,15 @@ ColumnChart.BarChart.prototype.renderInlineBarcharts = function() {
             .style({'width': parentElemWidth,
                     'height': (this.defaultHeight_ + 2).toString()})
                 .append('rect')
-                .text(divElem.dataset.barTooltipText)
+                .text(divElem.dataset.barValue)
                 .attr('width', scaledWidth)
                 .attr('height', this.defaultHeight_.toString())
                 .style('fill', divElem.dataset.barColor)
                 .style('opacity', 0.8)
-                .on('mouseover', function(d) { 
-                    this.onMouseOver_(d, toolTip, colName); })  // jshint ignore:line
+                .on('mouseover', function(d) {
+                    that.onMouseOver_(d, toolTip, colName, this); })  // jshint ignore:line
                 .on('mouseout', function(d) {
-                    this.onMouseOut_(d, toolTip); });  // jshint ignore:line
+                    that.onMouseOut_(d, toolTip, this); });  // jshint ignore:line
         // remove the div element
         $(divElem).remove();
     }
@@ -478,7 +479,7 @@ ColumnChart.StackedBarChart.prototype.onMouseOver_ = function(d, toolTip) {
 ColumnChart.StackedBarChart.prototype.onMouseOut_ = function(d, toolTip) {
 
     d3.select(this).transition().style('opacity', 0.8);
-    
+
     toolTip.transition().style('opacity', 0);
 };
 
