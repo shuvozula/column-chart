@@ -1,6 +1,7 @@
 Embedded Column Chart
 ============
 
+[![Build Status](https://travis-ci.org/shuvozula/column-chart.svg)](https://travis-ci.org/shuvozula/column-chart)
 
 # Introduction
 
