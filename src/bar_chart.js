@@ -72,15 +72,15 @@ ColumnChart.BarChart.prototype.renderInlineBarcharts = function() {
 
     var that = this;
     var divElem, colName, scaledWidth, parentElem, parentElemWidth;
-    var divPlaceHolders = $('.barchart');
+    var placeHolders = $('.barchart');
     var toolTip = d3.select('body').append('div')
                                    .attr('class', 'tooltip')
                                    .style('opacity', 0);
 
     // loop over each div-placeholder and fetch the max value. This is help
     // scale each bar to the available width in the parent TD element.
-    for (var i = 0; i < divPlaceHolders.length; i++) {
-        divElem = divPlaceHolders[i];
+    for (var i = 0; i < placeHolders.length; i++) {
+        divElem = placeHolders[i];
         colName = divElem.dataset.forColumn;
         if (!(colName in this.maxVal_))
             this.maxVal_[colName] = 0.0;
@@ -90,8 +90,8 @@ ColumnChart.BarChart.prototype.renderInlineBarcharts = function() {
 
     // loop over each div placeholder for the barchart and insert SVG element to
     // render
-    for (var j = 0; j < divPlaceHolders.length; j++) {
-        divElem = divPlaceHolders[j];
+    for (var j = 0; j < placeHolders.length; j++) {
+        divElem = placeHolders[j];
         colName = divElem.dataset.forColumn;
         parentElem = $(divElem).parent();
         parentElemWidth = $(parentElem).width();
