@@ -1,4 +1,4 @@
-Column Chart
+Embedded Column Chart
 ============
 
 
@@ -6,12 +6,12 @@ Column Chart
 
 This small library utilizes D3.js to help visualize numbers as bar-charts. Specifically, for tables with numbers, it can help visualize a certain column of numbers as mini horizontal bar-charts by replacing each number with a horizontal D3 chart.
 
-There are 2 types of charting options in this library:
+There are 3 types of charting features in this library:
 
 
 ## 1. Horizontal Bar charts
 
-This is the default option, where it displays numbers in a table column as mini bar charts. Each ```<td>``` element needs to have a set of data-* attrbutes as shown below:
+This is the default option, where it displays numbers in a table column as mini bar charts. Each ```<td>``` element needs to have a set of ```data-*``` attrbutes as shown below:
 
 ```
 data-for-column = "ColumnA"         # name of the column that its part of
@@ -28,11 +28,10 @@ So an example ```<td>``` element would be something as below:
             data-bar-value = "9"
             data-bar-color = "#ff0000">
         </td>
-
         ...
         ...
-
     </tr>
+    ...
 </table>
 ```
 
@@ -43,15 +42,41 @@ This is a slightly advanced feature, where each bar-chart is a group of stacks a
 
 ```
 {
-    "cols": ["BMW", "Mercedez", .... ],
+    "cols": ["BMW", "Mercedes", .... ],
     "data": [
         { "count": 28, "col": "BMW", "svg_class_id": "bmw" },
-        { "count": 44, "col": "Mercedez", "svg_class_id": "mecedez" },
+        { "count": 44, "col": "Mercedes", "svg_class_id": "mecedez" },
         ...
         ...
     ]
 }
 ```
+
+Each JSON structure shown above needs to be embedded into a ```data-bar-value-json="{...JSON structure...}"``` attribute within each ```<td>``` element of the table as below:
+
+```
+<table>
+    <tr>
+        <td data-bar-value-json="{
+            "cols": ["BMW", "Mercedes", .... ],
+            "data": [
+                { "count": 28, "col": "BMW", "svg_class_id": "bmw" },
+                { "count": 44, "col": "Mercedes", "svg_class_id": "mecedez" },
+                ...
+                ...
+            ]
+        }"></td>
+        <td data-bar-value-json="{...}"></td>
+        <td data-bar-value-json="{...}"></td>
+        ...
+        ...
+    </tr>
+    ...
+</table>
+```
+
+
+## 3. Legend Control for Stacked Bar Charts
 
 A legend-control is also added to the top of the table that is decorated with the stacked-bar charts. Two behaviors are supported with the legend control:
 * Single-click - Single-clicking a legend hides the corresponding stack for all rows, clicking again reveals the stack again.
@@ -60,8 +85,13 @@ A legend-control is also added to the top of the table that is decorated with th
 
 # Install
 
-Just put the appropriate .js library for debugging (column-chart.js) or production. from the dist/ directory of this project into your project's lib/ directory.
+Just use the appropriate .js library for debugging (column-chart.js) or production (column-chart-min.js) from the dist/ directory of this project into your project's library.
 
-# Build
 
 # Run tests
+
+Use Grunt to run Jasmine tests
+
+```
+$ grunt jasmine
+```
