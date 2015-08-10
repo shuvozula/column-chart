@@ -37,7 +37,10 @@ module.exports = function(grunt) {
         ],
         options: {
           specs: ['test/*.js'],
-          helpers: ['libs/*.js']
+          helpers: [
+            'libs/jquery-2.1.3.min.js',
+            'libs/d3.min.js'
+          ]
         }
       }
     },
