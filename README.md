@@ -1,7 +1,7 @@
 Embedded Column Chart
 ============
 
-[![Build Status](https://travis-ci.org/shuvozula/column-chart.svg)](https://travis-ci.org/shuvozula/column-chart)
+[![Build Status](https://travis-ci.org/shuvozula/embedded-column-chart.svg?branch=master)](https://travis-ci.org/shuvozula/embedded-column-chart)
 
 # Introduction
 
